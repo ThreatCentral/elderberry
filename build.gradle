@@ -13,8 +13,11 @@ repositories {
     jcenter()
 }
 
+sourceCompatibility = VERSION_1_7
+targetCompatibility = VERSION_1_7
+
 dependencies {
-    compile("org.mitre.taxii:taxii:1.1.0") {
+    compile("org.mitre.taxii:taxii:1.1.0.1") {
         exclude group: "net.sf.saxon"
     }
     compile "org.springframework:spring-web:4.2.0.RELEASE"
@@ -27,11 +30,13 @@ dependencies {
 
 version = 0.1
 
-jar {
-    manifest {
-        attributes("Implementation-Title": "spring-TAXII-contrib (elderberry)",
-                "Implementation-version": version)
-    }
+test {
+    systemProperties = [
+            'http.proxyHost' : System.getProperty("http.proxyHost"),
+            'https.proxyHost': System.getProperty("https.proxyHost"),
+            'http.proxyPort' : System.getProperty("http.proxyPort"),
+            'https.proxyPort': System.getProperty("https.proxyPort")
+    ]
 }
 
 ext {
@@ -44,6 +49,8 @@ ext {
 }
 
 import org.ajoberstar.grgit.Grgit
+
+import static org.gradle.api.JavaVersion.VERSION_1_7
 
 jar {
     doFirst {
@@ -65,6 +72,11 @@ git.branch=$grgit.branch.current.name${grgit.status().clean ? '' : ' (with local
 """
 
         println f.text
+    }
+
+    manifest {
+        attributes("Implementation-Title": "spring-TAXII-contrib (elderberry)",
+                "Implementation-version": version)
     }
 
     from "$buildDir/resources/main/git.properties"
