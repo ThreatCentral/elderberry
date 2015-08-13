@@ -1,6 +1,6 @@
 # spring-taxii
 
-[![Project Status](https://stillmaintained.com/amirkibbar/elderberry.svg)](https://stillmaintained.com/amirkibbar/elderberry)
+[![Project Status](http://stillmaintained.com/amirkibbar/elderberry.png)](http://stillmaintained.com/amirkibbar/elderberry)
 
 [![Build Status](https://travis-ci.org/amirkibbar/elderberry.svg?branch=master)](https://travis-ci.org/amirkibbar/elderberry)
 
