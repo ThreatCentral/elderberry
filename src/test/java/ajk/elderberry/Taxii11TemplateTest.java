@@ -1,8 +1,12 @@
 package ajk.elderberry;
 
 import org.junit.Test;
+import org.mitre.taxii.messages.xml11.CollectionInformationResponse;
 import org.mitre.taxii.messages.xml11.DiscoveryResponse;
+import org.mitre.taxii.messages.xml11.ServiceInstanceType;
 
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import static org.fest.assertions.Assertions.assertThat;
@@ -11,18 +15,38 @@ import static org.mitre.taxii.messages.xml11.ServiceTypeEnum.DISCOVERY;
 import static org.mitre.taxii.messages.xml11.ServiceTypeEnum.POLL;
 
 public class Taxii11TemplateTest {
-    @Test
-    public void discover() throws Exception {
-        Taxii11Template taxiTemplate = new Taxii11Template();
-
-        taxiTemplate.setDiscoveryUrl(new URL("http://hailataxii.com/taxii-discovery-service"));
-        taxiTemplate.setUseProxy(true);
-
-        taxiTemplate.afterPropertiesSet();
-
-        DiscoveryResponse response = taxiTemplate.discover();
+    private DiscoveryResponse discover(Taxii11Template taxiiTemplate) throws Exception {
+        DiscoveryResponse response = taxiiTemplate.discover();
         assertThat(response.getServiceInstances())
                 .hasSize(3)
                 .onProperty("serviceType").contains(DISCOVERY, COLLECTION_MANAGEMENT, POLL);
+
+        return response;
+    }
+
+    private CollectionInformationResponse collectionInformation(Taxii11Template taxiiTemplate, DiscoveryResponse discovery) throws MalformedURLException, URISyntaxException {
+        ServiceInstanceType collectionManagement = taxiiTemplate.findService(discovery.getServiceInstances(), COLLECTION_MANAGEMENT);
+        assertThat(collectionManagement).isNotNull();
+
+        CollectionInformationResponse collectionInfo = taxiiTemplate.collectionInformation(collectionManagement);
+
+        assertThat(collectionInfo.getCollections())
+                .onProperty("collectionName").contains("system.Default");
+
+        return collectionInfo;
+    }
+
+    @Test
+    public void discoverAndPoll() throws Exception {
+        Taxii11Template taxiiTemplate = new Taxii11Template();
+
+        taxiiTemplate.setDiscoveryUrl(new URL("http://hailataxii.com/taxii-discovery-service"));
+        taxiiTemplate.setUseProxy(true);
+
+        taxiiTemplate.afterPropertiesSet();
+
+        DiscoveryResponse discovery = discover(taxiiTemplate);
+
+        CollectionInformationResponse cm = collectionInformation(taxiiTemplate, discovery);
     }
 }

@@ -14,8 +14,12 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.protocol.HttpContext;
+import org.mitre.taxii.messages.xml11.CollectionInformationRequest;
+import org.mitre.taxii.messages.xml11.CollectionInformationResponse;
 import org.mitre.taxii.messages.xml11.DiscoveryRequest;
 import org.mitre.taxii.messages.xml11.DiscoveryResponse;
+import org.mitre.taxii.messages.xml11.ServiceInstanceType;
+import org.mitre.taxii.messages.xml11.ServiceTypeEnum;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.http.HttpEntity;
@@ -28,10 +32,11 @@ import org.springframework.http.converter.xml.MarshallingHttpMessageConverter;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.Collections;
 
 import static java.lang.System.currentTimeMillis;
@@ -159,17 +164,46 @@ public class Taxii11Template implements InitializingBean {
         }
     }
 
-    public DiscoveryResponse discover() throws IOException, URISyntaxException {
-        DiscoveryRequest body = new DiscoveryRequest();
-        body.setMessageId(generateMessageId());
-
-        ResponseEntity<DiscoveryResponse> response = restTemplate.postForEntity(discoveryUrl.toURI(), wrapRequest(body), DiscoveryResponse.class);
+    public DiscoveryResponse discover() throws URISyntaxException {
+        ResponseEntity<DiscoveryResponse> response = restTemplate.postForEntity(discoveryUrl.toURI(),
+                wrapRequest(new DiscoveryRequest().withMessageId(generateMessageId())), DiscoveryResponse.class);
 
         if (response.getStatusCode() == OK) {
             return response.getBody();
         }
 
         log.error("error during discovery: " + response.getStatusCode());
+
+        return null;
+    }
+
+    public ServiceInstanceType findService(Collection<ServiceInstanceType> services, ServiceTypeEnum type) {
+        for (ServiceInstanceType service : services) {
+            if (service.getServiceType().equals(type)) {
+                return service;
+            }
+        }
+
+        return null;
+    }
+
+    public CollectionInformationResponse collectionInformation(ServiceInstanceType service) throws MalformedURLException, URISyntaxException {
+        return collectionInformation(service.getAddress());
+    }
+
+    public CollectionInformationResponse collectionInformation(String url) throws MalformedURLException, URISyntaxException {
+        return collectionInformation(new URL(url));
+    }
+
+    private CollectionInformationResponse collectionInformation(URL url) throws URISyntaxException {
+        ResponseEntity<CollectionInformationResponse> response = restTemplate.postForEntity(url.toURI(),
+                wrapRequest(new CollectionInformationRequest().withMessageId(generateMessageId())), CollectionInformationResponse.class);
+
+        if (response.getStatusCode() == OK) {
+            return response.getBody();
+        }
+
+        log.error("error in collection information: " + response.getStatusCode());
 
         return null;
     }
