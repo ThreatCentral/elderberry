@@ -16,6 +16,7 @@ import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.protocol.HttpContext;
 import org.mitre.taxii.messages.xml11.CollectionInformationRequest;
 import org.mitre.taxii.messages.xml11.CollectionInformationResponse;
+import org.mitre.taxii.messages.xml11.CollectionRecordType;
 import org.mitre.taxii.messages.xml11.DiscoveryRequest;
 import org.mitre.taxii.messages.xml11.DiscoveryResponse;
 import org.mitre.taxii.messages.xml11.ServiceInstanceType;
@@ -60,39 +61,11 @@ public class Taxii11Template implements InitializingBean {
     private Jaxb2Marshaller marshaller;
     private RestTemplate restTemplate;
 
-    @Required
-    public void setDiscoveryUrl(URL discoveryUrl) {
-        this.discoveryUrl = discoveryUrl;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setUseProxy(boolean useProxy) {
-        this.useProxy = useProxy;
-    }
-
-    public void setProxyHost(String proxyHost) {
-        this.proxyHost = proxyHost;
-    }
-
-    public void setProxyPort(int proxyPort) {
-        this.proxyPort = proxyPort;
-    }
-
-    public void setMarshaller(Jaxb2Marshaller marshaller) {
-        this.marshaller = marshaller;
-    }
-
-    public void setRestTemplate(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
-
+    /**
+     * sets up the internal RestTemplate and Jaxb2Marshaller, unless these were provided externally
+     *
+     * @throws Exception
+     */
     @Override
     public void afterPropertiesSet() throws Exception {
         if (restTemplate == null) {
@@ -136,6 +109,150 @@ public class Taxii11Template implements InitializingBean {
         }
     }
 
+    /**
+     * runs a TAXII 1.1 discovery
+     *
+     * @return the <code>DiscoveryResponse</code>, or null if there was an error connecting to the discovery service
+     * @throws URISyntaxException when the {@link #discoveryUrl} is incorrect
+     */
+    public DiscoveryResponse discover() throws URISyntaxException {
+        ResponseEntity<DiscoveryResponse> response = restTemplate.postForEntity(discoveryUrl.toURI(),
+                wrapRequest(new DiscoveryRequest().withMessageId(generateMessageId())), DiscoveryResponse.class);
+
+        if (response.getStatusCode() == OK) {
+            return response.getBody();
+        }
+
+        log.error("error during discovery: " + response.getStatusCode());
+
+        return null;
+    }
+
+    /**
+     * a convenience method to locate a service by type
+     *
+     * @param services a collection of <code>ServiceInstanceType</code>, likely to be in <code>discovery.getServiceInstances()</code>
+     * @param type     the service type to locate in the collection
+     * @return the <code>ServiceInstanceType</code> or null when not found
+     */
+    public ServiceInstanceType findService(Collection<ServiceInstanceType> services, ServiceTypeEnum type) {
+        for (ServiceInstanceType service : services) {
+            if (service.getServiceType().equals(type)) {
+                return service;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * a convenience method to locate a collection by name
+     *
+     * @param collections a collection of <code>CollectionRecordType</code>, likely to be in <code>cm.getCollections()</code>
+     * @param name        the name of the collection to locate
+     * @return the <code>CollectionRecordType</code> or null when not found
+     */
+    public CollectionRecordType findCollection(Collection<CollectionRecordType> collections, String name) {
+        for (CollectionRecordType collection : collections) {
+            if (collection.getCollectionName().equals(name)) {
+                return collection;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * runs a TAXII 1.1 collection management request (a.k.a collection information)
+     *
+     * @param service the Collection Management (information) <code>ServiceInstanceType</code> as returned from {@link #discover()}
+     * @return a <code>CollectionInformationResponse</code> or null when there was an error retrieving the information
+     * @throws MalformedURLException when the service URL is incorrect
+     * @throws URISyntaxException    when the service URL is incorrect
+     */
+    public CollectionInformationResponse collectionInformation(ServiceInstanceType service) throws MalformedURLException, URISyntaxException {
+        return collectionInformation(service.getAddress());
+    }
+
+    /**
+     * runs a TAXII 1.1 collection management request (a.k.a collection information)
+     *
+     * @param url the collection management service URL
+     * @return a <code>CollectionInformationResponse</code> or null when there was an error retrieving the information
+     * @throws MalformedURLException when the service URL is incorrect
+     * @throws URISyntaxException    when the service URL is incorrect
+     */
+    public CollectionInformationResponse collectionInformation(String url) throws MalformedURLException, URISyntaxException {
+        return collectionInformation(new URL(url));
+    }
+
+    /**
+     * runs a TAXII 1.1 collection management request (a.k.a collection information)
+     *
+     * @param url the collection management service URL
+     * @return a <code>CollectionInformationResponse</code> or null when there was an error retrieving the information
+     * @throws URISyntaxException when the service URL is incorrect
+     */
+    public CollectionInformationResponse collectionInformation(URL url) throws URISyntaxException {
+        ResponseEntity<CollectionInformationResponse> response = restTemplate.postForEntity(url.toURI(),
+                wrapRequest(new CollectionInformationRequest().withMessageId(generateMessageId())), CollectionInformationResponse.class);
+
+        if (response.getStatusCode() == OK) {
+            return response.getBody();
+        }
+
+        log.error("error in collection information: " + response.getStatusCode());
+
+        return null;
+    }
+
+    @Required
+    public void setDiscoveryUrl(URL discoveryUrl) {
+        this.discoveryUrl = discoveryUrl;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setUseProxy(boolean useProxy) {
+        this.useProxy = useProxy;
+    }
+
+    public void setProxyHost(String proxyHost) {
+        this.proxyHost = proxyHost;
+    }
+
+    public void setProxyPort(int proxyPort) {
+        this.proxyPort = proxyPort;
+    }
+
+    public void setMarshaller(Jaxb2Marshaller marshaller) {
+        this.marshaller = marshaller;
+    }
+
+    public void setRestTemplate(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    private <T> HttpEntity<T> wrapRequest(T body) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(APPLICATION_XML);
+        headers.setAccept(singletonList(APPLICATION_XML));
+        headers.add("X-TAXII-Content-Type", VID_TAXII_XML_11);
+        String binding = discoveryUrl.getProtocol().endsWith("s") ? VID_TAXII_HTTPS_10 : VID_TAXII_HTTP_10;
+        headers.add("X-TAXII-Protocol", binding);
+        return new HttpEntity<>(body, headers);
+    }
+
+    private String generateMessageId() {
+        return String.valueOf(currentTimeMillis() / 100000);
+    }
+
     private static class PreemptiveAuthHttpRequestFactor extends HttpComponentsClientHttpRequestFactory {
         private String username;
         private String password;
@@ -162,63 +279,5 @@ public class Taxii11Template implements InitializingBean {
 
             return context;
         }
-    }
-
-    public DiscoveryResponse discover() throws URISyntaxException {
-        ResponseEntity<DiscoveryResponse> response = restTemplate.postForEntity(discoveryUrl.toURI(),
-                wrapRequest(new DiscoveryRequest().withMessageId(generateMessageId())), DiscoveryResponse.class);
-
-        if (response.getStatusCode() == OK) {
-            return response.getBody();
-        }
-
-        log.error("error during discovery: " + response.getStatusCode());
-
-        return null;
-    }
-
-    public ServiceInstanceType findService(Collection<ServiceInstanceType> services, ServiceTypeEnum type) {
-        for (ServiceInstanceType service : services) {
-            if (service.getServiceType().equals(type)) {
-                return service;
-            }
-        }
-
-        return null;
-    }
-
-    public CollectionInformationResponse collectionInformation(ServiceInstanceType service) throws MalformedURLException, URISyntaxException {
-        return collectionInformation(service.getAddress());
-    }
-
-    public CollectionInformationResponse collectionInformation(String url) throws MalformedURLException, URISyntaxException {
-        return collectionInformation(new URL(url));
-    }
-
-    private CollectionInformationResponse collectionInformation(URL url) throws URISyntaxException {
-        ResponseEntity<CollectionInformationResponse> response = restTemplate.postForEntity(url.toURI(),
-                wrapRequest(new CollectionInformationRequest().withMessageId(generateMessageId())), CollectionInformationResponse.class);
-
-        if (response.getStatusCode() == OK) {
-            return response.getBody();
-        }
-
-        log.error("error in collection information: " + response.getStatusCode());
-
-        return null;
-    }
-
-    private <T> HttpEntity<T> wrapRequest(T body) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(APPLICATION_XML);
-        headers.setAccept(singletonList(APPLICATION_XML));
-        headers.add("X-TAXII-Content-Type", VID_TAXII_XML_11);
-        String binding = discoveryUrl.getProtocol().endsWith("s") ? VID_TAXII_HTTPS_10 : VID_TAXII_HTTP_10;
-        headers.add("X-TAXII-Protocol", binding);
-        return new HttpEntity<>(body, headers);
-    }
-
-    private String generateMessageId() {
-        return String.valueOf(currentTimeMillis() / 100000);
     }
 }

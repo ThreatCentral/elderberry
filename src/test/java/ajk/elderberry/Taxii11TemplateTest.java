@@ -2,6 +2,7 @@ package ajk.elderberry;
 
 import org.junit.Test;
 import org.mitre.taxii.messages.xml11.CollectionInformationResponse;
+import org.mitre.taxii.messages.xml11.CollectionRecordType;
 import org.mitre.taxii.messages.xml11.DiscoveryResponse;
 import org.mitre.taxii.messages.xml11.ServiceInstanceType;
 
@@ -48,5 +49,8 @@ public class Taxii11TemplateTest {
         DiscoveryResponse discovery = discover(taxiiTemplate);
 
         CollectionInformationResponse cm = collectionInformation(taxiiTemplate, discovery);
+
+        CollectionRecordType systemDefault = taxiiTemplate.findCollection(cm.getCollections(), "system.Default");
+        assertThat(systemDefault).isNotNull();
     }
 }
