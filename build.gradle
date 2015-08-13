@@ -1,0 +1,71 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "org.ajoberstar:grgit:1.3.0"
+    }
+}
+
+apply plugin: 'java'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile("org.mitre.taxii:taxii:1.1.0") {
+        exclude group: "net.sf.saxon"
+    }
+    compile "org.springframework:spring-web:4.2.0.RELEASE"
+    compile "org.springframework:spring-oxm:4.2.0.RELEASE"
+    compile "org.apache.httpcomponents:httpclient:4.5"
+
+    testCompile "junit:junit:4.12"
+    testCompile "org.easytesting:fest-assert:1.4"
+}
+
+version = 0.1
+
+jar {
+    manifest {
+        attributes("Implementation-Title": "spring-TAXII-contrib (elderberry)",
+                "Implementation-version": version)
+    }
+}
+
+ext {
+    ESC = "${(char) 27}"
+    CYAN = "${ESC}[36m"
+    GREEN = "${ESC}[32m"
+    YELLOW = "${ESC}[33m"
+    RED = "${ESC}[31m"
+    NORMAL = "${ESC}[0m"
+}
+
+import org.ajoberstar.grgit.Grgit
+
+jar {
+    doFirst {
+        println "${CYAN}* jar:$NORMAL generating git.properties"
+        ant.mkdir(dir: "$buildDir/resources/main")
+        File f = new File("$buildDir/resources/main/git.properties")
+
+        if (f.exists()) {
+            ant.delete(file: f)
+        }
+
+        def grgit = Grgit.open()
+        def lastCommit = grgit.log(maxCommits: 1)[0]
+
+        f << """# this file is generated during the build
+git.commit.id=$lastCommit.id
+git.commit.time=${new Date(new Integer(lastCommit.time).longValue() * 1000)}
+git.branch=$grgit.branch.current.name${grgit.status().clean ? '' : ' (with local changes)'}
+"""
+
+        println f.text
+    }
+
+    from "$buildDir/resources/main/git.properties"
+}
