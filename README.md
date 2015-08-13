@@ -1,8 +1,8 @@
 # spring-taxii
 
-[![Project Status](https://stillmaintained.com/amirkibbar/elderberry.png)](https://stillmaintained.com/amirkibbar/elderberry)
+[![Project Status](https://stillmaintained.com/amirkibbar/elderberry.svg)](https://stillmaintained.com/amirkibbar/elderberry)
 
-[![Build Status](https://travis-ci.org/amirkibbar/elderberry.svg?branch=master) ](https://travis-ci.org/amirkibbar/elderberry)
+[![Build Status](https://travis-ci.org/amirkibbar/elderberry.svg?branch=master)](https://travis-ci.org/amirkibbar/elderberry)
 
 # Overview
 
@@ -15,7 +15,7 @@ project for its JAXB implementation of the XML messages.
 
 # Configuration options
 
-* discoveryUrl - the only required property. Set this URL to point to the discovery URL of your TAXII server* 
+* discoveryUrl - the only required property. Set this URL to point to the discovery URL of your TAXII server
 * username - optional username for servers that require basic authentication
 * password - optional password for servers that require basic authentication
 * useProxy - a flag to request the use of an http/s proxy to access the TAXII server
