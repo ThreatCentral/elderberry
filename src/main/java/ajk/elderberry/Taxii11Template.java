@@ -50,6 +50,40 @@ import static org.mitre.taxii.Versions.VID_TAXII_XML_11;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_XML;
 
+/**
+ * Taxii11Template is a convenient way to connect spring to a TAXII server. This template allows you to easily connect
+ * with a <a href="http://taxii.mitre.org/">TAXII 1.1</a> server. This template uses the
+ * <a href="https://github.com/TAXIIProject/java-taxii">TAXII-java</a> project for its JAXB implementation of the XML
+ * messages.<p/>
+ * Configuration options:<br/>
+ * <ul>
+ *     <li>discoveryUrl - the only required property. Set this URL to point to the discovery URL of your TAXII server</li>
+ *     <li>username - optional username for servers that require basic authentication</li>
+ *     <li>password - optional password for servers that require basic authentication</li>
+ *     <li>useProxy - a flag to request the use of an http/s proxy to access the TAXII server</li>
+ *     <li>proxyHost - optional proxy hostname. If useProxy is true and this property is not specified, then the
+ *     template will attempt to obtain the hostname from the system property http.proxyHost or https.proxyHost,
+ *     depending on the discoveryUrl scheme</li>
+ *     <li>proxyPort - optional proxy port. If useProxy is true and this property is not specified, then the
+ *     template will attempt to obtain the port from the system property http.proxyPort or https.proxyPort,
+ *     depending on the discoveryUrl scheme</li>
+ *     <li>marshaller - an optional <code>Jaxb2Marshaller</code>. If not provided then the template will create its
+ *     own marshaller. This marshaller is expected to be able to marshal and unmarshal TAXII 1.1 XMLs into and from
+ *     objects</li>
+ *     <li>restTemplate - an optional <code>RestTemplate</code>. If not provided then the template will create its own
+ *     rest template configured with the marshaller</li>
+ * </ul>
+ * <p/>
+ * example:<p/>
+ * <code>
+ *     <pre>
+ *     &lt;bean name="taxiiTemplate" class="ajk.elderberry.Taxii11Template"
+ *          p:discoveryUrl="http://hailataxii.com/taxii-discovery-service"
+ *          p:useProxy="true"
+ *          />
+ *    </pre>
+ * </code>
+ */
 public class Taxii11Template implements InitializingBean {
     private Log log = getLog(getClass());
     private URL discoveryUrl;
