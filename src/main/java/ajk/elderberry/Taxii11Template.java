@@ -19,6 +19,8 @@ import org.mitre.taxii.messages.xml11.CollectionInformationResponse;
 import org.mitre.taxii.messages.xml11.CollectionRecordType;
 import org.mitre.taxii.messages.xml11.DiscoveryRequest;
 import org.mitre.taxii.messages.xml11.DiscoveryResponse;
+import org.mitre.taxii.messages.xml11.PollRequest;
+import org.mitre.taxii.messages.xml11.PollResponse;
 import org.mitre.taxii.messages.xml11.ServiceInstanceType;
 import org.mitre.taxii.messages.xml11.ServiceTypeEnum;
 import org.springframework.beans.factory.InitializingBean;
@@ -33,15 +35,20 @@ import org.springframework.http.converter.xml.MarshallingHttpMessageConverter;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.web.client.RestTemplate;
 
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.XMLGregorianCalendar;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.singletonList;
+import static javax.xml.datatype.DatatypeFactory.newInstance;
 import static org.apache.commons.logging.LogFactory.getLog;
 import static org.apache.http.impl.client.HttpClientBuilder.create;
 import static org.mitre.taxii.Versions.VID_TAXII_HTTPS_10;
@@ -83,9 +90,10 @@ import static org.springframework.http.MediaType.APPLICATION_XML;
  * }
  *    </pre>
  */
+@SuppressWarnings("unused")
 public class Taxii11Template implements InitializingBean {
     private Log log = getLog(getClass());
-    private URL discoveryUrl;
+    private URI discoveryUrl;
     private String username = "";
     private String password = "";
     private boolean useProxy = false;
@@ -106,17 +114,17 @@ public class Taxii11Template implements InitializingBean {
 
             if (useProxy) {
                 if ("".equals(proxyHost)) {
-                    proxyHost = System.getProperty(discoveryUrl.getProtocol() + ".proxyHost");
+                    proxyHost = System.getProperty(discoveryUrl.getScheme() + ".proxyHost");
                 }
 
                 if (proxyPort == 0) {
-                    proxyPort = Integer.parseInt(System.getProperty(discoveryUrl.getProtocol() + ".proxyPort", "0"));
+                    proxyPort = Integer.parseInt(System.getProperty(discoveryUrl.getScheme() + ".proxyPort", "0"));
                 }
 
                 if ("".equals(proxyHost) || proxyHost == null || proxyPort == 0) {
                     log.warn("proxy requested, but not setup, not using a proxy");
                 } else {
-                    log.info("using " + discoveryUrl.getProtocol() + " proxy: " + proxyHost + ":" + proxyPort);
+                    log.info("using " + discoveryUrl.getScheme() + " proxy: " + proxyHost + ":" + proxyPort);
                     HttpHost proxy = new HttpHost(proxyHost, proxyPort);
                     DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);
                     builder.setRoutePlanner(routePlanner);
@@ -149,16 +157,10 @@ public class Taxii11Template implements InitializingBean {
      * @throws URISyntaxException when the {@link #discoveryUrl} is incorrect
      */
     public DiscoveryResponse discover() throws URISyntaxException {
-        ResponseEntity<DiscoveryResponse> response = restTemplate.postForEntity(discoveryUrl.toURI(),
+        ResponseEntity<DiscoveryResponse> response = restTemplate.postForEntity(discoveryUrl,
                 wrapRequest(new DiscoveryRequest().withMessageId(generateMessageId())), DiscoveryResponse.class);
 
-        if (response.getStatusCode() == OK) {
-            return response.getBody();
-        }
-
-        log.error("error during discovery: " + response.getStatusCode());
-
-        return null;
+        return respond(response);
     }
 
     /**
@@ -230,44 +232,164 @@ public class Taxii11Template implements InitializingBean {
         ResponseEntity<CollectionInformationResponse> response = restTemplate.postForEntity(url.toURI(),
                 wrapRequest(new CollectionInformationRequest().withMessageId(generateMessageId())), CollectionInformationResponse.class);
 
+        return respond(response);
+    }
+
+    /**
+     * polls a TAXII 1.1 service
+     *
+     * @param collection the collection record to poll
+     * @return a poll response
+     * @throws URISyntaxException    when the collection record has an incorrect address
+     * @throws MalformedURLException when the collection record has an incorrect address
+     */
+    public PollResponse poll(CollectionRecordType collection) throws URISyntaxException, MalformedURLException {
+        return poll(collection, "", yesterday(), new Date());
+    }
+
+    /**
+     * polls a TAXII 1.1 service
+     *
+     * @param collection     the collection record to poll
+     * @param subscriptionId an optional subscription ID. Some service require it, even if they ignore it (like hail a taxii)
+     * @param exclusiveBegin begin time to poll
+     * @param inclusiveEnd   end time to poll
+     * @return a poll response
+     * @throws URISyntaxException    when the collection record has an incorrect address
+     * @throws MalformedURLException when the collection record has an incorrect address
+     */
+    public PollResponse poll(CollectionRecordType collection, String subscriptionId, Date exclusiveBegin, Date inclusiveEnd) throws URISyntaxException, MalformedURLException {
+        return poll(new URL(collection.getPollingServices().get(0).getAddress()), collection.getCollectionName(),
+                subscriptionId, exclusiveBegin, inclusiveEnd);
+    }
+
+    /**
+     * polls a TAXII 1.1 service
+     *
+     * @param pollUrl        poll service URL
+     * @param collectionName collection name to poll
+     * @param subscriptionId an optional subscription ID. Some service require it, even if they ignore it (like hail a taxii)
+     * @param exclusiveBegin begin time to poll
+     * @param inclusiveEnd   end time to poll
+     * @return a poll response
+     * @throws URISyntaxException    when the collection record has an incorrect address
+     */
+    public PollResponse poll(URL pollUrl, String collectionName, String subscriptionId, Date exclusiveBegin, Date inclusiveEnd) throws URISyntaxException {
+        try {
+            PollRequest pollRequest = new PollRequest()
+                    .withMessageId(generateMessageId())
+                    .withCollectionName(collectionName)
+                    .withExclusiveBeginTimestamp(toXmlGregorianCalendar(exclusiveBegin))
+                    .withInclusiveEndTimestamp(toXmlGregorianCalendar(inclusiveEnd))
+                    .withSubscriptionID(subscriptionId);
+
+            ResponseEntity<PollResponse> response = restTemplate.postForEntity(pollUrl.toURI(),
+                    wrapRequest(pollRequest), PollResponse.class);
+
+            return respond(response);
+        } catch (DatatypeConfigurationException e) {
+            log.error("error converting dates: " + e.getMessage(), e);
+            return null;
+        }
+    }
+
+    private <T> T respond(ResponseEntity<T> response) {
         if (response.getStatusCode() == OK) {
             return response.getBody();
         }
 
-        log.error("error in collection information: " + response.getStatusCode());
+        log.error("error in TAXII request: " + response.getStatusCode());
 
         return null;
     }
 
-    @Required
-    public void setDiscoveryUrl(URL discoveryUrl) {
-        this.discoveryUrl = discoveryUrl;
+    private Date yesterday() {
+        return new Date(currentTimeMillis() - 86400000);
     }
 
+    private XMLGregorianCalendar toXmlGregorianCalendar(Date date) throws DatatypeConfigurationException {
+        GregorianCalendar c = new GregorianCalendar();
+        c.setTime(date);
+        return newInstance().newXMLGregorianCalendar(c);
+    }
+
+    /**
+     * the only required property. Set this URL to point to the discovery URL of your TAXII server.
+     *
+     * @param discoveryUrl For example: https://threatcentral.io/tc/taxii/discovery
+     */
+    @Required
+    public void setDiscoveryUrl(URL discoveryUrl) throws URISyntaxException {
+        this.discoveryUrl = discoveryUrl.toURI();
+    }
+
+    /**
+     * optional username for servers that require basic authentication
+     *
+     * @param username if left blank preemptive basic authentication is not setup
+     */
     public void setUsername(String username) {
         this.username = username;
     }
 
+    /**
+     * optional password for servers that require basic authentication
+     *
+     * @param password can be left blank, some services don't require a password, only a username
+     */
     public void setPassword(String password) {
         this.password = password;
     }
 
+    /**
+     * a flag to request the use of an http/s proxy to access the TAXII server
+     *
+     * @param useProxy when true the connection will attempt to setup an http/s proxy, depending on the
+     *                 {@link #setDiscoveryUrl(URL)}. This is considered a request because it depends on the
+     *                 {@link #setProxyHost(String)}, see details there.
+     */
     public void setUseProxy(boolean useProxy) {
         this.useProxy = useProxy;
     }
 
+    /**
+     * optional proxy hostname
+     *
+     * @param proxyHost if useProxy is true and this property is not specified, then the template
+     *                  will attempt to obtain the hostname from the system property http.proxyHost or https.proxyHost,
+     *                  depending on the discoveryUrl scheme
+     */
     public void setProxyHost(String proxyHost) {
         this.proxyHost = proxyHost;
     }
 
+    /**
+     * optional proxy port
+     *
+     * @param proxyPort if useProxy is true and this property is not specified, then the template will
+     *                  attempt to obtain the port from the system property http.proxyPort or https.proxyPort, depending
+     *                  on the discoveryUrl scheme
+     */
     public void setProxyPort(int proxyPort) {
         this.proxyPort = proxyPort;
     }
 
+    /**
+     * an optional <code>Jaxb2Marshaller</code>
+     *
+     * @param marshaller if not provided then the template will create its own marshaller. This marshaller is expected
+     *                   to be able to marshal and unmarshal TAXII 1.1 XMLs into and from objects
+     */
     public void setMarshaller(Jaxb2Marshaller marshaller) {
         this.marshaller = marshaller;
     }
 
+    /**
+     * an optional <code>RestTemplate</code>
+     *
+     * @param restTemplate if not provided then the template will create its own rest template configured with the
+     *                     marshaller
+     */
     public void setRestTemplate(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
@@ -277,7 +399,7 @@ public class Taxii11Template implements InitializingBean {
         headers.setContentType(APPLICATION_XML);
         headers.setAccept(singletonList(APPLICATION_XML));
         headers.add("X-TAXII-Content-Type", VID_TAXII_XML_11);
-        String binding = discoveryUrl.getProtocol().endsWith("s") ? VID_TAXII_HTTPS_10 : VID_TAXII_HTTP_10;
+        String binding = discoveryUrl.getScheme().endsWith("s") ? VID_TAXII_HTTPS_10 : VID_TAXII_HTTP_10;
         headers.add("X-TAXII-Protocol", binding);
         return new HttpEntity<>(body, headers);
     }

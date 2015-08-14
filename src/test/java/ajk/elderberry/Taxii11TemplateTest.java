@@ -4,12 +4,15 @@ import org.junit.Test;
 import org.mitre.taxii.messages.xml11.CollectionInformationResponse;
 import org.mitre.taxii.messages.xml11.CollectionRecordType;
 import org.mitre.taxii.messages.xml11.DiscoveryResponse;
+import org.mitre.taxii.messages.xml11.PollResponse;
 import org.mitre.taxii.messages.xml11.ServiceInstanceType;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Date;
 
+import static java.lang.System.currentTimeMillis;
 import static org.fest.assertions.Assertions.assertThat;
 import static org.mitre.taxii.messages.xml11.ServiceTypeEnum.COLLECTION_MANAGEMENT;
 import static org.mitre.taxii.messages.xml11.ServiceTypeEnum.DISCOVERY;
@@ -52,5 +55,8 @@ public class Taxii11TemplateTest {
 
         CollectionRecordType systemDefault = taxiiTemplate.findCollection(cm.getCollections(), "system.Default");
         assertThat(systemDefault).isNotNull();
+
+        PollResponse poll = taxiiTemplate.poll(systemDefault, "some id", new Date(currentTimeMillis() - 86400000), new Date());
+        assertThat(poll.getContentBlocks()).isNotEmpty();
     }
 }
