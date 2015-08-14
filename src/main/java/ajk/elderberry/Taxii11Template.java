@@ -272,7 +272,7 @@ public class Taxii11Template implements InitializingBean {
      * @param exclusiveBegin begin time to poll
      * @param inclusiveEnd   end time to poll
      * @return a poll response
-     * @throws URISyntaxException    when the collection record has an incorrect address
+     * @throws URISyntaxException when the collection record has an incorrect address
      */
     public PollResponse poll(URL pollUrl, String collectionName, String subscriptionId, Date exclusiveBegin, Date inclusiveEnd) throws URISyntaxException {
         try {
@@ -317,6 +317,7 @@ public class Taxii11Template implements InitializingBean {
      * the only required property. Set this URL to point to the discovery URL of your TAXII server.
      *
      * @param discoveryUrl For example: https://threatcentral.io/tc/taxii/discovery
+     * @throws URISyntaxException when the discoverUrl cannot be converted into a URI
      */
     @Required
     public void setDiscoveryUrl(URL discoveryUrl) throws URISyntaxException {

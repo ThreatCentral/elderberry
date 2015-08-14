@@ -24,7 +24,7 @@ project for its JAXB implementation of the XML messages.
     }
     
     dependencies {
-        compile "ajk.elderberry:elderberry:0.1"
+        compile "ajk.elderberry:elderberry:0.2"
     }
 ```
 
