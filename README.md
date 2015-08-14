@@ -39,3 +39,9 @@ project for its JAXB implementation of the XML messages.
          p:useProxy="true"
          />
 ```
+
+# Resources
+
+* [JavaDocs](http://amirkibbar.github.io/elderberry/index.html)
+* [TAXII-java](https://github.com/TAXIIProject/java-taxii)
+* [TAXII 1.1](http://taxii.mitre.org)

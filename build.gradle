@@ -64,6 +64,8 @@ artifacts {
     archives javadocJar
 }
 
+assemble.dependsOn "sourcesJar", "javadocJar"
+
 import org.ajoberstar.grgit.Grgit
 
 jar {
