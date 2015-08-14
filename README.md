@@ -4,6 +4,8 @@
 
 [![Build Status](https://travis-ci.org/amirkibbar/elderberry.svg?branch=master)](https://travis-ci.org/amirkibbar/elderberry)
 
+[ ![Download](https://api.bintray.com/packages/amirk/maven/spring-taxii/images/download.svg) ](https://bintray.com/amirk/maven/spring-taxii/_latestVersion)
+
 # Overview
 
 The spring-taxii project provides a convenient way to connect to a TAXII server from within an Spring application. The
@@ -12,6 +14,19 @@ key (and at the moment only) class it provides is the Taxii11Template.
 Taxii11Template is a convenient way to connect spring to a TAXII server. This template allows you to easily connect
 with a [TAXII 1.1](http://taxii.mitre.org) server. This template uses the [TAXII-java](https://github.com/TAXIIProject/java-taxii)
 project for its JAXB implementation of the XML messages.
+
+# Setup your gradle project
+
+```gradle
+    
+    repositories {
+        maven { url  "http://dl.bintray.com/amirk/maven" }
+    }
+    
+    dependencies {
+        compile "ajk.elderberry:elderberry:0.1"
+    }
+```
 
 # Configuration options
 

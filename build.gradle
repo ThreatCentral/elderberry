@@ -10,8 +10,13 @@ buildscript {
     }
 }
 
+plugins {
+    id "com.jfrog.bintray" version "1.2"
+}
+
 apply plugin: 'java'
 apply plugin: 'org.ajoberstar.github-pages'
+apply plugin: 'maven-publish'
 
 repositories {
     jcenter()
@@ -104,3 +109,75 @@ githubPages {
         from javadoc
     }
 }
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId 'ajk.elderberry'
+            artifactId 'elderberry'
+            version project.version
+
+            pom.withXml {
+                asNode().children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+                    name 'elderberry'
+                    inceptionYear "2015"
+                    url "https://github.com/amirkibbar/elderberry"
+                    licenses {
+                        license {
+                            name 'The Apache Software License, Version 2.0'
+                            url 'http://www.apache.org/license/LICENSE-2.0.txt'
+                            distribution 'repo'
+                        }
+                    }
+                }
+            }
+
+            from components.java
+
+            artifact sourcesJar {
+                classifier "sources"
+            }
+
+            artifact javadocJar {
+                classifier "javadoc"
+            }
+        }
+    }
+}
+
+model {
+    tasks.generatePomFileForMavenPublication {
+        destination = file("$buildDir/libs/elderberry-${project.version}.pom")
+    }
+}
+
+task install(dependsOn: 'publishMavenPublicationToMavenLocal') << {
+    logger.info "installing $project.name"
+}
+
+bintray {
+    user = System.getenv("BINTRAY_USER")
+    key = System.getenv("BINTRAY_KEY")
+
+    publications = ['maven']
+
+    publish = true
+
+    pkg {
+        repo = 'maven'
+        name = 'spring-taxii'
+        websiteUrl = 'https://github.com/amirkibbar/elderberry'
+        issueTrackerUrl = 'https://github.com/amirkibbar/elderberry/issues'
+        vcsUrl = 'https://github.com/amirkibbar/elderberry.git'
+        licenses = ['Apache-2.0']
+        labels = ['spring-taxii']
+        version {
+            name = project.version
+        }
+    }
+}
+
+bintrayUpload.dependsOn = [sourcesJar, javadocJar]
+
+task publishAll(dependsOn: [ bintrayUpload, publishGhPages]) << {}
