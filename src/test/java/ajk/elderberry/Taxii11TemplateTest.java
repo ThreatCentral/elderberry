@@ -33,6 +33,7 @@ public class Taxii11TemplateTest {
         assertThat(collectionManagement).isNotNull();
 
         CollectionInformationResponse collectionInfo = taxiiTemplate.collectionInformation(collectionManagement);
+        assertThat(collectionInfo).isNotNull();
 
         assertThat(collectionInfo.getCollections())
                 .onProperty("collectionName").contains("system.Default");
@@ -42,12 +43,12 @@ public class Taxii11TemplateTest {
 
     @Test
     public void discoverAndPoll() throws Exception {
+        TaxiiConnection taxiiConnection = new TaxiiConnection();
+        taxiiConnection.setDiscoveryUri(new URL("http://hailataxii.com/taxii-discovery-service").toURI());
+        taxiiConnection.setUseProxy(true);
+
         Taxii11Template taxiiTemplate = new Taxii11Template();
-
-        taxiiTemplate.setDiscoveryUrl(new URL("http://hailataxii.com/taxii-discovery-service"));
-        taxiiTemplate.setUseProxy(true);
-
-        taxiiTemplate.afterPropertiesSet();
+        taxiiTemplate.setTaxiiConnection(taxiiConnection);
 
         DiscoveryResponse discovery = discover(taxiiTemplate);
 

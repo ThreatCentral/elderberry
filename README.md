@@ -8,12 +8,17 @@
 
 # Overview
 
-The spring-taxii project provides a convenient way to connect to a TAXII server from within an Spring application. The
-key (and at the moment only) class it provides is the Taxii11Template.
+The spring-taxii project provides a convenient way to connect to a TAXII server from within an Spring application. Both
+TAXII 1.0 and 1.1 protocols are supported.
 
-Taxii11Template is a convenient way to connect spring to a TAXII server. This template allows you to easily connect
-with a [TAXII 1.1](http://taxii.mitre.org) server. This template uses the [TAXII-java](https://github.com/TAXIIProject/java-taxii)
-project for its JAXB implementation of the XML messages.
+Taxii11Template is a convenient way to connect a spring application to a TAXII 1.1 server. This template allows you to 
+easily connect with a [TAXII 1.1](http://taxii.mitre.org/specifications/version1.1) server. 
+
+Taxii10Template is a convenient way to connect a spring application to a TAXII 1.0 server. This template allows you to
+easily connect with a [TAXII 1.0](http://taxii.mitre.org/specifications/version1.0) server.
+
+The spring-taxii library uses [TAXII-java](https://github.com/TAXIIProject/java-taxii) project for its JAXB 
+implementation of the XML messages.
 
 # Setup your gradle project
 
@@ -24,11 +29,11 @@ project for its JAXB implementation of the XML messages.
     }
     
     dependencies {
-        compile "ajk.elderberry:elderberry:0.2"
+        compile "ajk.elderberry:elderberry:0.3"
     }
 ```
 
-# Configuration options
+# Connection configuration options
 
 * discoveryUrl - the only required property. Set this URL to point to the discovery URL of your TAXII server
 * username - optional username for servers that require basic authentication
@@ -49,10 +54,18 @@ project for its JAXB implementation of the XML messages.
 
 ```xml
 
-    <bean name="taxiiTemplate" class="ajk.elderberry.Taxii11Template"
+    <bean name="taxiiConnection" class="ajk.elderberry.TaxiiConnection"
          p:discoveryUrl="http://hailataxii.com/taxii-discovery-service"
          p:useProxy="true"
-         />
+    />
+ 
+    <bean name="taxii10Template" class="ajk.elderberry.Taxii10Template"
+         p:taxiiConnection-ref="taxiiConnection"
+    />
+
+    <bean name="taxii11Template" class="ajk.elderberry.Taxii11Template"
+         p:taxiiConnection-ref="taxiiConnection"
+    />
 ```
 
 # Resources
