@@ -33,22 +33,12 @@ implementation of the XML messages.
     }
 ```
 
-# Connection configuration options
+# Features
 
-* discoveryUrl - the only required property. Set this URL to point to the discovery URL of your TAXII server
-* username - optional username for servers that require basic authentication
-* password - optional password for servers that require basic authentication
-* useProxy - a flag to request the use of an http/s proxy to access the TAXII server
-* proxyHost - optional proxy hostname. If useProxy is true and this property is not specified, then the template will 
-    attempt to obtain the hostname from the system property http.proxyHost or https.proxyHost, depending on the 
-    discoveryUrl scheme
-* proxyPort - optional proxy port. If useProxy is true and this property is not specified, then the template will 
-    attempt to obtain the port from the system property http.proxyPort or https.proxyPort, depending on the discoveryUrl
-    scheme
-* marshaller - an optional `Jaxb2Marshaller`. If not provided then the template will create its own marshaller. This 
-    marshaller is expected to be able to marshal and unmarshal TAXII 1.1 XMLs into and from objects 
-* restTemplate - an optional `RestTemplate`. If not provided then the template will create its own rest template 
-    configured with the marshaller
+* TAXII 1.1 support
+* TAXII 1.0 support
+* Basic authentication
+* HTTP/s proxy support
 
 # Example
 
@@ -68,8 +58,9 @@ implementation of the XML messages.
     />
 ```
 
+See the [JavaDocs](http://amirkibbar.github.io/elderberry/index.html) for further details.
+
 # Resources
 
-* [JavaDocs](http://amirkibbar.github.io/elderberry/index.html)
 * [TAXII-java](https://github.com/TAXIIProject/java-taxii)
 * [TAXII 1.1](http://taxii.mitre.org)
