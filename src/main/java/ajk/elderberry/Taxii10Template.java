@@ -32,6 +32,7 @@ import static javax.xml.datatype.DatatypeFactory.newInstance;
 import static org.apache.commons.logging.LogFactory.getLog;
 import static org.mitre.taxii.Versions.VID_TAXII_HTTPS_10;
 import static org.mitre.taxii.Versions.VID_TAXII_HTTP_10;
+import static org.mitre.taxii.Versions.VID_TAXII_SERVICES_10;
 import static org.mitre.taxii.Versions.VID_TAXII_XML_10;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_XML;
@@ -152,7 +153,7 @@ public class Taxii10Template {
      * @return a poll response
      * @throws URISyntaxException when the feed record URL cannot be converted to a URI
      */
-    private PollResponse poll(URL pollUrl, String feedName, String subscriptionId, Date exclusiveBegin, Date inclusiveEnd) throws URISyntaxException {
+    public PollResponse poll(URL pollUrl, String feedName, String subscriptionId, Date exclusiveBegin, Date inclusiveEnd) throws URISyntaxException {
         try {
             PollRequest pollRequest = new PollRequest()
                     .withMessageId(generateMessageId())
@@ -232,6 +233,7 @@ public class Taxii10Template {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(APPLICATION_XML);
         headers.setAccept(singletonList(APPLICATION_XML));
+        headers.add("X-TAXII-Services", VID_TAXII_SERVICES_10);
         headers.add("X-TAXII-Content-Type", VID_TAXII_XML_10);
         String binding = conn.getDiscoveryUrl().getScheme().endsWith("s") ? VID_TAXII_HTTPS_10 : VID_TAXII_HTTP_10;
         headers.add("X-TAXII-Protocol", binding);

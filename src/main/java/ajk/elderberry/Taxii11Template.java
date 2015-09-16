@@ -31,6 +31,7 @@ import static javax.xml.datatype.DatatypeFactory.newInstance;
 import static org.apache.commons.logging.LogFactory.getLog;
 import static org.mitre.taxii.Versions.VID_TAXII_HTTPS_10;
 import static org.mitre.taxii.Versions.VID_TAXII_HTTP_10;
+import static org.mitre.taxii.Versions.VID_TAXII_SERVICES_11;
 import static org.mitre.taxii.Versions.VID_TAXII_XML_11;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_XML;
@@ -162,7 +163,7 @@ public class Taxii11Template {
      *
      * @param collection the collection record to poll
      * @return a poll response
-     * @throws URISyntaxException when the service URL cannot be converted into a URI
+     * @throws URISyntaxException    when the service URL cannot be converted into a URI
      * @throws MalformedURLException when the collection record has an incorrect address
      */
     public PollResponse poll(CollectionRecordType collection) throws URISyntaxException, MalformedURLException {
@@ -178,7 +179,7 @@ public class Taxii11Template {
      * @param exclusiveBegin begin time to poll
      * @param inclusiveEnd   end time to poll
      * @return a poll response
-     * @throws URISyntaxException when the collection record URL cannot be converted to a URI
+     * @throws URISyntaxException    when the collection record URL cannot be converted to a URI
      * @throws MalformedURLException when the collection record has an incorrect address
      */
     public PollResponse poll(CollectionRecordType collection, String subscriptionId, Date exclusiveBegin, Date inclusiveEnd) throws URISyntaxException, MalformedURLException {
@@ -240,6 +241,7 @@ public class Taxii11Template {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(APPLICATION_XML);
         headers.setAccept(singletonList(APPLICATION_XML));
+        headers.add("X-TAXII-Services", VID_TAXII_SERVICES_11);
         headers.add("X-TAXII-Content-Type", VID_TAXII_XML_11);
         String binding = conn.getDiscoveryUrl().getScheme().endsWith("s") ? VID_TAXII_HTTPS_10 : VID_TAXII_HTTP_10;
         headers.add("X-TAXII-Protocol", binding);
