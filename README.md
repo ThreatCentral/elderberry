@@ -29,7 +29,7 @@ implementation of the XML messages.
     }
     
     dependencies {
-        compile "ajk.elderberry:elderberry:0.3"
+        compile "ajk.elderberry:elderberry:0.4"
     }
 ```
 
@@ -39,6 +39,7 @@ implementation of the XML messages.
 * TAXII 1.0 support
 * Basic authentication
 * HTTP/s proxy support
+* SSL client certificates
 
 # Example
 
