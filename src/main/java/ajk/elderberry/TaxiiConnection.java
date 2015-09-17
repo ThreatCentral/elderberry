@@ -62,8 +62,8 @@ import static org.springframework.util.StringUtils.isEmpty;
  * <p>
  * The SSL certificate authentication can be used by supplying the trust store and key store, or by supplying the
  * certificate in PEM format.
- * <br/>
- * The following is an example of a private key in PEM PKCS#8 format:<br/>
+ * <br>
+ * The following is an example of a private key in PEM PKCS#8 format:<br>
  * <pre>
  * {@code -----BEGIN PRIVATE KEY-----
  *   c29tZSB0ZXh0IHRvIG1pbWljIGEgYmFzZSA2NCBlbmNvZGVkIGtleQo
@@ -73,7 +73,7 @@ import static org.springframework.util.StringUtils.isEmpty;
  *   -----END PRIVATE KEY-----}
  * </pre>
  * <p>
- * And the following is an example of a certificate in PEM format:<br/>
+ * And the following is an example of a certificate in PEM format:<br>
  * <pre>
  * {@code -----BEGIN CERTIFICATE-----
  *   c29tZSB0ZXh0IHRvIG1pbWljIGEgYmFzZSA2NCBlbmNvZGVkIGtleQo
