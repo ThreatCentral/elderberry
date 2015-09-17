@@ -26,6 +26,7 @@ import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.SSLContext;
+import java.io.File;
 import java.net.URI;
 import java.security.KeyFactory;
 import java.security.KeyStore;
@@ -39,10 +40,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static java.nio.file.Files.newInputStream;
 import static java.security.KeyStore.getInstance;
 import static java.util.Collections.singletonList;
 import static java.util.UUID.randomUUID;
-import static java.util.stream.Stream.of;
 import static javax.xml.bind.DatatypeConverter.parseBase64Binary;
 import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.apache.commons.logging.LogFactory.getLog;
@@ -83,6 +84,24 @@ import static org.springframework.util.StringUtils.isEmpty;
  *   -----END CERTIFICATE-----}
  * </pre>
  * <p>
+ * There are several options to configure 2-way SSL authenticate when the TAXII server requires SSL authentication:
+ * <ul>
+ * <li>Directly set the key store and trust store as {@link KeyStore} objects. In this option you can construct the key
+ * and trust store in any way you want and provide it to the connection. The key store is expected to contain the client
+ * certificate, the client certificate private key and the client certificate chain. The trust store is expected to
+ * contain the server trusted certificates. To use this option use {@link #setKeyStore(KeyStore, String)} and
+ * {@link #setTrustStore(KeyStore)}</li>
+ * <li>Provide the key store file and password and trust store file and password. This is very similar to the previous
+ * option, except that the {@code }TaxiiConnection} takes care of loading the key and trust stores from the files
+ * provided. To use this option use {@link #setKeyStoreFile(File)}, {@link #setKeyStorePassword(String)} to set the
+ * key store and {@link #setTrustStoreFile(File)} and {@link #setTrustStorePassword(String)} to set the trust store.</li>
+ * <li>Provide the client and server certificates using PEM strings. This is probably the most convenient way to setup
+ * the SSL connection because you're likely to have PEM certificates and private key rather than JKS stores. To set the
+ * client certificate provide the private key as PEM with {@link #setPrivateKeyPem(String)} and provide the client
+ * certificate chain as PEM with {@link #setClientCertificatePemChain(List)}. Provide the trusted certificates with
+ * {@link #setTrustedPemCertificates(List)}.<br>When constructing the key store and trust store from PEMs you can
+ * retrieve the constructed stores back from the connection. This could be useful when caching the store locally.</li>
+ * </ul>
  * <br>
  * The TaxiiConnection can be used with both {@link Taxii11Template} and {@link Taxii10Template}.
  */
@@ -100,6 +119,13 @@ public class TaxiiConnection {
     private RestTemplate restTemplate;
     private KeyStore keyStore;
     private KeyStore trustStore;
+    private File keyStoreFile;
+    private File trustStoreFile;
+    private String keyStorePassword;
+    private String trustStorePassword;
+    private String privateKeyPem;
+    private List<String> clientCertificatePemChain;
+    private List<String> trustedPemCertificates;
     private char[] keyPassword;
 
     /**
@@ -124,68 +150,78 @@ public class TaxiiConnection {
     }
 
     /**
-     * optional trust material in PEM format. Use this method instead of the {@link #setTrustStore(KeyStore)} when you
-     * have a set of trusted certificates in PEM format instead of a Java trust store (key store)
+     * optional key store password, used when the key store is set as a file using {@link #setKeyStoreFile(File)}
      *
-     * @param pems the trusted certificates in PEM format
+     * @param keyStorePassword the key store password
      */
-    public void setTrustedCertificates(String... pems) {
-        if (pems == null || pems.length == 0) {
-            return;
-        }
-
-        try {
-            // initialize an empty trust store
-            trustStore = getInstance("JKS");
-            trustStore.load(null);
-
-            // add all PEMs as trusted certificates to the in-memory trust store
-            addPemsToStore(trustStore, pems);
-        } catch (Exception e) {
-            throw new RuntimeException("unable to create trust store, " + e.getMessage(), e);
-        }
+    public void setKeyStorePassword(String keyStorePassword) {
+        this.keyStorePassword = keyStorePassword;
     }
 
     /**
-     * optional private SSL key in PEM format. Use this method instead of {@link #setKeyStore(KeyStore, String)} when
-     * you have a private key in PEM format instead of a Java key store with the private key material in it
+     * optional key store file. If set the key store will be loaded from this file using the password set by
+     * {@link #setKeyStorePassword(String)}
      *
-     * @param keyPem    the private key in PEM format
-     * @param chainPems the optional client certificate chain in PEM format
+     * @param keyStoreFile the key store file
      */
-    public void setPrivateKey(String keyPem, String... chainPems) {
-        if (isEmpty(keyPem)) {
-            return;
-        }
-
-        try {
-            // initialize an empty key store
-            keyStore = getInstance("JKS");
-            keyStore.load(null);
-
-            // generate a random password for the private key
-            keyPassword = randomUUID().toString().toCharArray();
-            keyPassword = "pass".toCharArray();
-
-            // load the private key
-            byte[] key = parseBase64Binary(keyPem.replaceAll("-+.*-+", ""));
-            PrivateKey privateKey = KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(key));
-            if (chainPems != null) {
-                List<Certificate> chain = addPemsToStore(keyStore, chainPems);
-                keyStore.setKeyEntry(randomUUID().toString(), privateKey, keyPassword, chain.toArray(new Certificate[chain.size()]));
-            } else {
-                keyStore.setKeyEntry(randomUUID().toString(), privateKey, keyPassword, new Certificate[]{});
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("unable to create key store, " + e.getMessage(), e);
-        }
+    public void setKeyStoreFile(File keyStoreFile) {
+        this.keyStoreFile = keyStoreFile;
     }
 
-    private List<Certificate> addPemsToStore(KeyStore store, String[] pems) throws CertificateException {
-        List<Certificate> result = new ArrayList<>(pems.length);
+    /**
+     * optional trust store file. If set the trust store will be loaded from the file using the password set by
+     * {@link #setTrustStorePassword(String)}
+     *
+     * @param trustStoreFile the trust store file
+     */
+    public void setTrustStoreFile(File trustStoreFile) {
+        this.trustStoreFile = trustStoreFile;
+    }
+
+    /**
+     * optional trust store password, used when the trust store is set as a file using {@link #setTrustStoreFile(File)}
+     *
+     * @param trustStorePassword the trust store password
+     */
+    public void setTrustStorePassword(String trustStorePassword) {
+        this.trustStorePassword = trustStorePassword;
+    }
+
+    /**
+     * sets the private key of the client certificate chain. Use this together with
+     * {@link #setClientCertificatePemChain(List)}
+     *
+     * @param keyPem the private key PEM text
+     */
+    public void setPrivateKeyPem(String keyPem) {
+        this.privateKeyPem = keyPem;
+    }
+
+    /**
+     * sets the client certificate chain
+     *
+     * @param clientCertificatePemChain the client certificate chain in PEM format. The client certificate itself is
+     *                                  expected to be the first item. Note that this is an ordered list of certificates
+     *                                  in PEM format, according to their order in the chain bottom to top
+     */
+    public void setClientCertificatePemChain(List<String> clientCertificatePemChain) {
+        this.clientCertificatePemChain = clientCertificatePemChain;
+    }
+
+    /**
+     * sets the trusted certificates. These certificates represent the server-side trusted certificates
+     *
+     * @param trustedPemCertificates the trusted certificates in PEM format
+     */
+    public void setTrustedPemCertificates(List<String> trustedPemCertificates) {
+        this.trustedPemCertificates = trustedPemCertificates;
+    }
+
+    private List<Certificate> addPemsToStore(KeyStore store, List<String> pems) throws CertificateException {
+        List<Certificate> result = new ArrayList<>(pems.size());
 
         CertificateFactory factory = CertificateFactory.getInstance("X.509");
-        of(pems).forEach(pem -> {
+        pems.forEach(pem -> {
             try {
                 X509Certificate cert = (X509Certificate) factory.generateCertificate(toInputStream(pem));
                 store.setCertificateEntry(randomUUID().toString(), cert);
@@ -200,21 +236,110 @@ public class TaxiiConnection {
 
     /**
      * a convenient way to externally cache the key store would be to create it from PEMs using
-     * {@link #setPrivateKey(String, String...)}, then obtaining it with this method and storing it for future use
+     * {@link #setPrivateKeyPem(String)} and {@link #setClientCertificatePemChain(List)} then obtaining it with this method and
+     * storing it for future use.<p>
+     * This method attempts to retrieve the key store in the following algorithm:
+     * <ul>
+     * <li>When it was already loaded or constructed it's returned</li>
+     * <li>When it was directly set by {@link #setKeyStore(KeyStore, String)} then this key store is returned</li>
+     * <li>When a key store file and passowrd was set by {@link #setKeyStoreFile(File)} and
+     * {@link #setKeyStorePassword(String)}, then the key store is loaded from the file and returned</li>
+     * <li>When a private key was set by {@link #setPrivateKeyPem(String)} and its certificate chain was set by
+     * {@link #setClientCertificatePemChain(List)} then a new key store is created, the private key material and the
+     * client certificates are loaded into it, then this new key store is returned</li>
+     * </ul>
+     * </p>
      *
      * @return the key store
      */
     public KeyStore getKeyStore() {
+        if (keyStore != null) {
+            return keyStore;
+        }
+
+        if (keyStoreFile != null) {
+            try {
+                keyStore = getInstance("JKS");
+                keyStore.load(newInputStream(keyStoreFile.toPath()),
+                        keyStorePassword == null ? "".toCharArray() : keyStorePassword.toCharArray());
+            } catch (Exception e) {
+                throw new RuntimeException("a key store file was set, but it could not be read, " + e.getMessage(), e);
+            }
+        } else if (!isEmpty(privateKeyPem)) {
+            try {
+                // initialize an empty key store
+                keyStore = getInstance("JKS");
+                keyStore.load(null);
+
+                // generate a random password for the private key
+                keyPassword = randomUUID().toString().toCharArray();
+
+                // load the private key
+                byte[] key = parseBase64Binary(privateKeyPem.replaceAll("-+.*-+", ""));
+                PrivateKey privateKey = KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(key));
+                if (clientCertificatePemChain != null) {
+                    List<Certificate> chain = addPemsToStore(keyStore, clientCertificatePemChain);
+                    keyStore.setKeyEntry(randomUUID().toString(),
+                            privateKey,
+                            keyPassword,
+                            chain.toArray(new Certificate[chain.size()]));
+                } else {
+                    keyStore.setKeyEntry(randomUUID().toString(),
+                            privateKey,
+                            keyPassword,
+                            new Certificate[]{});
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("unable to create key store, " + e.getMessage(), e);
+            }
+        }
+
         return keyStore;
     }
 
     /**
      * a convenient way to externally cache the trust store would be to create it from PEMs using
-     * {@link #setTrustedCertificates(String...)}, then obtaining it with this method and storing it for future use
+     * {@link #setTrustedPemCertificates(List)} then obtaining it with this method and storing it for future use.<p>
+     * This method attempts to retrieve the trust store using the following algorithm:
+     * <ul>
+     * <li>When it was already loaded or constructed it's returned</li>
+     * <li>When it was directly set by {@link #setTrustStore(KeyStore)} then this trust store is returned</li>
+     * <li>When a trust store file and password was set by {@link #setTrustStoreFile(File)} and
+     * {@link #setTrustStorePassword(String)}, then the trust store is loaded from the file and returned</li>
+     * <li>When a trusted list of certificates was set by {@link #setTrustedPemCertificates(List)} then a new trust store
+     * is created and the trusted certificates are loaded into it and then this new trust store is returned</li>
+     * </ul>
+     * </p>
      *
      * @return the trust store
      */
     public KeyStore getTrustStore() {
+        if (trustStore != null) {
+            return trustStore;
+        }
+
+        if (trustStoreFile != null) {
+            try {
+                trustStore = getInstance("JKS");
+                trustStore.load(newInputStream(trustStoreFile.toPath()),
+                        trustStorePassword == null ? "".toCharArray() : trustStorePassword.toCharArray());
+            } catch (Exception e) {
+                throw new RuntimeException("a trust store file was set, but it could not be read, " + e.getMessage(), e);
+            }
+        } else if (!isEmpty(trustedPemCertificates)) {
+
+            try {
+                // initialize an empty trust store
+                trustStore = getInstance("JKS");
+                trustStore.load(null);
+
+                // add all PEMs as trusted certificates to the in-memory trust store
+                addPemsToStore(trustStore, trustedPemCertificates);
+            } catch (Exception e) {
+                throw new RuntimeException("unable to create trust store, " + e.getMessage(), e);
+            }
+        }
+
         return trustStore;
     }
 
@@ -336,12 +461,12 @@ public class TaxiiConnection {
                 }
             }
 
-            if (trustStore != null || keyStore != null) {
+            if (getTrustStore() != null || getKeyStore() != null) {
                 SSLContext sslContext;
                 try {
                     sslContext = SSLContexts.custom()
-                            .loadTrustMaterial(trustStore, new TrustSelfSignedStrategy())
-                            .loadKeyMaterial(keyStore, keyPassword)
+                            .loadTrustMaterial(getTrustStore(), new TrustSelfSignedStrategy())
+                            .loadKeyMaterial(getKeyStore(), keyPassword)
                             .build();
                 } catch (Exception e) {
                     log.error("unable to create SSL context, " + e.getMessage(), e);
