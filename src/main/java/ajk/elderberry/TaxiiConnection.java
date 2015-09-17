@@ -248,7 +248,6 @@ public class TaxiiConnection {
      * {@link #setClientCertificatePemChain(List)} then a new key store is created, the private key material and the
      * client certificates are loaded into it, then this new key store is returned</li>
      * </ul>
-     * </p>
      *
      * @return the key store
      */
@@ -309,7 +308,6 @@ public class TaxiiConnection {
      * <li>When a trusted list of certificates was set by {@link #setTrustedPemCertificates(List)} then a new trust store
      * is created and the trusted certificates are loaded into it and then this new trust store is returned</li>
      * </ul>
-     * </p>
      *
      * @return the trust store
      */
