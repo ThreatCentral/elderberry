@@ -29,7 +29,7 @@ implementation of the XML messages.
     }
     
     dependencies {
-        compile "ajk.elderberry:elderberry:0.5"
+        compile "ajk.elderberry:elderberry:0.7"
     }
 ```
 

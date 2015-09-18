@@ -1,5 +1,6 @@
 package ajk.elderberry;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.logging.Log;
 import org.apache.http.HttpHost;
@@ -41,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
 import static java.nio.file.Files.newInputStream;
 import static java.security.KeyStore.getInstance;
 import static java.util.Collections.singletonList;
@@ -107,9 +109,8 @@ import static org.springframework.util.StringUtils.isEmpty;
  * The TaxiiConnection can be used with both {@link Taxii11Template} and {@link Taxii10Template}.
  */
 @SuppressWarnings("unused")
+@JsonAutoDetect(fieldVisibility = ANY)
 public class TaxiiConnection {
-    private Log log = getLog(getClass());
-
     private URI discoveryUrl;
     private String username = "";
     private String password = "";
@@ -123,6 +124,11 @@ public class TaxiiConnection {
     private String privateKeyPem;
     private List<String> clientCertificatePemChain;
     private List<String> trustedPemCertificates;
+
+    @JsonIgnore
+    private Log log = getLog(getClass());
+
+    @JsonIgnore
     private char[] keyPassword;
 
     @JsonIgnore

@@ -34,9 +34,10 @@ dependencies {
 
     testCompile "junit:junit:4.12"
     testCompile "org.easytesting:fest-assert:1.4"
+    testCompile "com.fasterxml.jackson.core:jackson-databind:2.5.3"
 }
 
-version = 0.6
+version = 0.7
 
 test {
     systemProperties = [
