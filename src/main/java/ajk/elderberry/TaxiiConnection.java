@@ -1,5 +1,6 @@
 package ajk.elderberry;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.logging.Log;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -115,10 +116,6 @@ public class TaxiiConnection {
     private boolean useProxy = false;
     private String proxyHost = "";
     private int proxyPort;
-    private Jaxb2Marshaller marshaller;
-    private RestTemplate restTemplate;
-    private KeyStore keyStore;
-    private KeyStore trustStore;
     private File keyStoreFile;
     private File trustStoreFile;
     private String keyStorePassword;
@@ -127,6 +124,18 @@ public class TaxiiConnection {
     private List<String> clientCertificatePemChain;
     private List<String> trustedPemCertificates;
     private char[] keyPassword;
+
+    @JsonIgnore
+    private KeyStore keyStore;
+
+    @JsonIgnore
+    private KeyStore trustStore;
+
+    @JsonIgnore
+    private Jaxb2Marshaller marshaller;
+
+    @JsonIgnore
+    private RestTemplate restTemplate;
 
     /**
      * optional key store that contains your private key to be sent when the server is using SSL certificate-based
