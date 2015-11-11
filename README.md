@@ -8,16 +8,16 @@
 
 # Overview
 
-The spring-taxii project provides a convenient way to connect to a TAXII server from within an Spring application. Both
+The Spring-TAXII project provides a convenient way to connect to a TAXII server from within a Spring application. Both
 TAXII 1.0 and 1.1 protocols are supported.
 
-Taxii11Template is a convenient way to connect a spring application to a TAXII 1.1 server. This template allows you to 
+Taxii11Template is a convenient way to connect a Spring application to a TAXII 1.1 server. This template allows you to 
 easily connect with a [TAXII 1.1](http://taxii.mitre.org/specifications/version1.1) server. 
 
-Taxii10Template is a convenient way to connect a spring application to a TAXII 1.0 server. This template allows you to
+Taxii10Template is a convenient way to connect a Spring application to a TAXII 1.0 server. This template allows you to
 easily connect with a [TAXII 1.0](http://taxii.mitre.org/specifications/version1.0) server.
 
-The spring-taxii library uses [TAXII-java](https://github.com/TAXIIProject/java-taxii) project for its JAXB 
+The Spring-TAXII library uses [TAXII-java](https://github.com/TAXIIProject/java-taxii) project for its JAXB 
 implementation of the XML messages.
 
 # Setup your gradle project
