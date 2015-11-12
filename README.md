@@ -59,7 +59,7 @@ implementation of the XML messages.
     />
 ```
 
-See the [JavaDocs](http://amirkibbar.github.io/elderberry/index.html) for further details.
+See the [JavaDocs](http://threatcentral.github.io/elderberry/index.html) for further details.
 
 # Resources
 
