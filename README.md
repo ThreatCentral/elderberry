@@ -45,16 +45,16 @@ implementation of the XML messages.
 
 ```xml
 
-    <bean name="taxiiConnection" class="ajk.elderberry.TaxiiConnection"
+    <bean name="taxiiConnection" class="TaxiiConnection"
          p:discoveryUrl="http://hailataxii.com/taxii-discovery-service"
          p:useProxy="true"
     />
  
-    <bean name="taxii10Template" class="ajk.elderberry.Taxii10Template"
+    <bean name="taxii10Template" class="Taxii10Template"
          p:taxiiConnection-ref="taxiiConnection"
     />
 
-    <bean name="taxii11Template" class="ajk.elderberry.Taxii11Template"
+    <bean name="taxii11Template" class="Taxii11Template"
          p:taxiiConnection-ref="taxiiConnection"
     />
 ```

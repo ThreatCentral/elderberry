@@ -46,7 +46,7 @@ dependencies {
     testCompile "com.fasterxml.jackson.core:jackson-databind:2.5.3"
 }
 
-version = 0.7
+version = 0.8
 
 test {
     systemProperties = [
@@ -125,7 +125,7 @@ githubPages {
 publishing {
     publications {
         maven(MavenPublication) {
-            groupId 'ajk.elderberry'
+            groupId 'com.hpe.elderberry'
             artifactId 'elderberry'
             version project.version
 

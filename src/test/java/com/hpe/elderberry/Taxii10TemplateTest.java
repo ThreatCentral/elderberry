@@ -6,7 +6,7 @@
  * either express or implied. See the License for the specific language governing permissions and limitations under the
  * License.
  */
-package ajk.elderberry;
+package com.hpe.elderberry;
 
 import org.junit.Test;
 import org.mitre.taxii.messages.xml10.DiscoveryResponse;

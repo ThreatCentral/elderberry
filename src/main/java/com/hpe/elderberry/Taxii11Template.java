@@ -6,7 +6,7 @@
  * either express or implied. See the License for the specific language governing permissions and limitations under the
  * License.
  */
-package ajk.elderberry;
+package com.hpe.elderberry;
 
 import org.apache.commons.logging.Log;
 import org.mitre.taxii.messages.xml11.CollectionInformationRequest;
@@ -54,12 +54,12 @@ import static org.springframework.http.MediaType.APPLICATION_XML;
  * <pre>
  * {@code
  *
- *     <bean name="taxiiConnection" class="ajk.elderberry.TaxiiConnection"
+ *     <bean name="taxiiConnection" class="TaxiiConnection"
  *          p:discoveryUrl="http://hailataxii.com/taxii-discovery-service"
  *          p:useProxy="true"
  *     />
  *
- *     <bean name="taxiiTemplate" class="ajk.elderberry.Taxii11Template"
+ *     <bean name="taxiiTemplate" class="Taxii11Template"
  *          p:taxiiConnection-ref="taxiiConnection"
  *     />
  * }
