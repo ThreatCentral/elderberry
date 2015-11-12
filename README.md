@@ -4,7 +4,7 @@
 
 [![Build Status](https://travis-ci.org/amirkibbar/elderberry.svg?branch=master)](https://travis-ci.org/amirkibbar/elderberry)
 
-[ ![Download](https://api.bintray.com/packages/amirk/maven/spring-taxii/images/download.svg) ](https://bintray.com/amirk/maven/spring-taxii/_latestVersion)
+[ ![Download](https://api.bintray.com/packages/threatcentral/maven/spring-taxii/images/download.svg) ](https://bintray.com/threatcentral/maven/spring-taxii/_latestVersion)
 
 # Overview
 
@@ -25,11 +25,11 @@ implementation of the XML messages.
 ```gradle
     
     repositories {
-        maven { url  "http://dl.bintray.com/amirk/maven" }
+        maven { url  "http://dl.bintray.com/threatcentral/maven" }
     }
     
     dependencies {
-        compile "ajk.elderberry:elderberry:0.7"
+        compile "com.hpe.elderberry:elderberry:0.8"
     }
 ```
 

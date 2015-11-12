@@ -20,7 +20,7 @@ buildscript {
 }
 
 plugins {
-    id "com.jfrog.bintray" version "1.2"
+    id "com.jfrog.bintray" version "1.4"
 }
 
 apply plugin: 'java'
@@ -179,9 +179,10 @@ bintray {
     pkg {
         repo = 'maven'
         name = 'spring-taxii'
-        websiteUrl = 'https://github.com/amirkibbar/elderberry'
-        issueTrackerUrl = 'https://github.com/amirkibbar/elderberry/issues'
-        vcsUrl = 'https://github.com/amirkibbar/elderberry.git'
+        userOrg = 'threatcentral'
+        websiteUrl = 'https://github.com/ThreatCentral/elderberry'
+        issueTrackerUrl = 'https://github.com/ThreatCentral/elderberry/issues'
+        vcsUrl = 'https://github.com/ThreatCentral/elderberry.git'
         licenses = ['Apache-2.0']
         labels = ['spring-taxii']
         version {
