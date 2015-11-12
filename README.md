@@ -1,4 +1,4 @@
-# spring-taxii
+# Spring-TAXII
 
 [![Project Status](http://stillmaintained.com/amirkibbar/elderberry.png)](http://stillmaintained.com/amirkibbar/elderberry)
 
