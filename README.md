@@ -17,7 +17,7 @@ easily connect with a [TAXII 1.1](http://taxii.mitre.org/specifications/version1
 Taxii10Template is a convenient way to connect a Spring application to a TAXII 1.0 server. This template allows you to
 easily connect with a [TAXII 1.0](http://taxii.mitre.org/specifications/version1.0) server.
 
-The Spring-TAXII library uses [TAXII-java](https://github.com/TAXIIProject/java-taxii) project for its JAXB 
+The Spring-TAXII library uses the [TAXII-java](https://github.com/TAXIIProject/java-taxii) project for its JAXB 
 implementation of the XML messages.
 
 # Setup your gradle project
