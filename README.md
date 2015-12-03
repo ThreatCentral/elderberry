@@ -1,7 +1,5 @@
 # Spring-TAXII
 
-[![Project Status](http://stillmaintained.com/amirkibbar/elderberry.png)](http://stillmaintained.com/amirkibbar/elderberry)
-
 [![Build Status](https://travis-ci.org/amirkibbar/elderberry.svg?branch=master)](https://travis-ci.org/amirkibbar/elderberry)
 
 [ ![Download](https://api.bintray.com/packages/threatcentral/maven/spring-taxii/images/download.svg) ](https://bintray.com/threatcentral/maven/spring-taxii/_latestVersion)
