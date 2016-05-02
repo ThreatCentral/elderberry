@@ -46,6 +46,7 @@ import static org.mitre.taxii.Versions.VID_TAXII_XML_11;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_XML;
 import static org.springframework.util.StringUtils.collectionToCommaDelimitedString;
+import static org.springframework.util.StringUtils.isEmpty;
 
 /**
  * <p>Taxii11Template is a convenient way to connect spring to a TAXII 1.1 server. This template allows you to easily
@@ -239,15 +240,36 @@ public class Taxii11Template {
             ResponseEntity<StatusMessage> response = conn.getRestTemplate().postForEntity(pollUrl.toURI(),
                     wrapRequest(pollRequest), StatusMessage.class);
 
-            log.error("error polling,\n status: " + response.getStatusCode() +
-                    ",\n message id: " + response.getBody().getMessageId() +
-                    ",\n in response to: " + response.getBody().getInResponseTo() +
-                    ",\n status type: " + response.getBody().getStatusType() +
-                    ",\n message: " + response.getBody().getMessage() +
-                    ",\n details: " + collectionToCommaDelimitedString(response.getBody().getStatusDetail().getDetails()));
+            log.error("error polling, status: "+statusMessageSafelyToString(response.getBody()));
 
             return null;
         }
+    }
+
+    private String statusMessageSafelyToString(StatusMessage msg) {
+        StringBuilder sb = new StringBuilder();
+
+        if(!isEmpty(msg.getMessageId())) {
+            sb.append("message ID: ").append(msg.getMessageId()).append("\n");
+        }
+
+        if(!isEmpty(msg.getInResponseTo())) {
+            sb.append("in response to: ").append(msg.getInResponseTo()).append("\n");
+        }
+
+        if(!isEmpty(msg.getStatusType())) {
+            sb.append("status type: ").append(msg.getStatusType()).append("\n");
+        }
+
+        if(!isEmpty(msg.getMessage())) {
+            sb.append("message: ").append(msg.getMessage()).append("\n");
+        }
+
+        if(msg.getStatusDetail()!=null && msg.getStatusDetail().getDetails()!=null) {
+            sb.append("details: ").append(collectionToCommaDelimitedString(msg.getStatusDetail().getDetails()));
+        }
+
+        return sb.toString();
     }
 
     private <T> T respond(ResponseEntity<T> response) {
