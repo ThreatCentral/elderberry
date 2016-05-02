@@ -27,7 +27,7 @@ implementation of the XML messages.
     }
     
     dependencies {
-        compile "com.hpe.elderberry:elderberry:0.8"
+        compile "com.hpe.elderberry:elderberry:0.9"
     }
 ```
 
