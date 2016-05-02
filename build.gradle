@@ -31,19 +31,23 @@ repositories {
     jcenter()
 }
 
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.13'
+}
+
 dependencies {
     compile("org.mitre.taxii:taxii:1.1.0") {
         exclude group: "net.sf.saxon"
     }
-    compile "org.springframework:spring-web:4.2.0.RELEASE"
-    compile "org.springframework:spring-oxm:4.2.0.RELEASE"
-    compile "org.apache.httpcomponents:httpclient:4.5"
-    compile "commons-io:commons-io:2.4"
-    compile "com.fasterxml.jackson.core:jackson-annotations:2.5.3"
+    compile "org.springframework:spring-web:4.2.5.RELEASE"
+    compile "org.springframework:spring-oxm:4.2.5.RELEASE"
+    compile "org.apache.httpcomponents:httpclient:4.5.2"
+    compile "commons-io:commons-io:2.5"
+    compile "com.fasterxml.jackson.core:jackson-annotations:2.7.4"
 
     testCompile "junit:junit:4.12"
     testCompile "org.easytesting:fest-assert:1.4"
-    testCompile "com.fasterxml.jackson.core:jackson-databind:2.5.3"
+    testCompile "com.fasterxml.jackson.core:jackson-databind:2.7.4"
 }
 
 version = 0.8
