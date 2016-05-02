@@ -18,6 +18,8 @@ import org.mitre.taxii.messages.xml11.PollRequest;
 import org.mitre.taxii.messages.xml11.PollResponse;
 import org.mitre.taxii.messages.xml11.ServiceInstanceType;
 import org.mitre.taxii.messages.xml11.ServiceTypeEnum;
+import org.mitre.taxii.messages.xml11.StatusMessage;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.http.HttpEntity;
@@ -43,6 +45,7 @@ import static org.mitre.taxii.Versions.VID_TAXII_SERVICES_11;
 import static org.mitre.taxii.Versions.VID_TAXII_XML_11;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_XML;
+import static org.springframework.util.StringUtils.collectionToCommaDelimitedString;
 
 /**
  * <p>Taxii11Template is a convenient way to connect spring to a TAXII 1.1 server. This template allows you to easily
@@ -207,20 +210,42 @@ public class Taxii11Template {
      * @throws URISyntaxException when the collection record URL cannot be converted to a URI
      */
     public PollResponse poll(URL pollUrl, String collectionName, String subscriptionId, Date exclusiveBegin, Date inclusiveEnd) throws URISyntaxException {
+        PollRequest pollRequest;
         try {
-            PollRequest pollRequest = new PollRequest()
+            pollRequest = new PollRequest()
                     .withMessageId(generateMessageId())
                     .withCollectionName(collectionName)
                     .withExclusiveBeginTimestamp(toXmlGregorianCalendar(exclusiveBegin))
                     .withInclusiveEndTimestamp(toXmlGregorianCalendar(inclusiveEnd))
                     .withSubscriptionID(subscriptionId);
+        } catch (DatatypeConfigurationException e) {
+            log.error("error converting dates: " + e.getMessage(), e);
+            return null;
+        }
 
+        try {
+            // poll
             ResponseEntity<PollResponse> response = conn.getRestTemplate().postForEntity(pollUrl.toURI(),
                     wrapRequest(pollRequest), PollResponse.class);
 
             return respond(response);
-        } catch (DatatypeConfigurationException e) {
-            log.error("error converting dates: " + e.getMessage(), e);
+        } catch (TypeMismatchException e) {
+            // if we're here this means that the poll request returned an error in the form of a StatusMessage, let's
+            // poll again and log the message
+
+            log.error("poll request failed, response contained a status message instead of a poll response, " +
+                    "requesting again to retrieve the status message", e);
+
+            ResponseEntity<StatusMessage> response = conn.getRestTemplate().postForEntity(pollUrl.toURI(),
+                    wrapRequest(pollRequest), StatusMessage.class);
+
+            log.error("error polling,\n status: " + response.getStatusCode() +
+                    ",\n message id: " + response.getBody().getMessageId() +
+                    ",\n in response to: " + response.getBody().getInResponseTo() +
+                    ",\n status type: " + response.getBody().getStatusType() +
+                    ",\n message: " + response.getBody().getMessage() +
+                    ",\n details: " + collectionToCommaDelimitedString(response.getBody().getStatusDetail().getDetails()));
+
             return null;
         }
     }
