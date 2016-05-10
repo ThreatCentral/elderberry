@@ -95,9 +95,9 @@ import static org.springframework.util.StringUtils.isEmpty;
  *   -----END CERTIFICATE-----}
  * </pre>
  * <p>
- * There are several options to configure 2-way SSL authenticate when the TAXII server requires SSL authentication:
+ * There are several options to configure 2-way SSL authentication when the TAXII server requires SSL authentication:
  * <ul>
- * <li>Directly set the key store and trust store as {@link KeyStore} objects. In this option you can construct the key
+ * <li>Directly set the key store and trust store as {@link KeyStore} objects. Using this option you can construct the key
  * and trust store in any way you want and provide it to the connection. The key store is expected to contain the client
  * certificate, the client certificate private key and the client certificate chain. The trust store is expected to
  * contain the server trusted certificates. To use this option use {@link #setKeyStore(KeyStore, String)} and
@@ -106,7 +106,7 @@ import static org.springframework.util.StringUtils.isEmpty;
  * option, except that the {@code }TaxiiConnection} takes care of loading the key and trust stores from the files
  * provided. To use this option use {@link #setKeyStoreFile(File)}, {@link #setKeyStorePassword(String)} to set the
  * key store and {@link #setTrustStoreFile(File)} and {@link #setTrustStorePassword(String)} to set the trust store.</li>
- * <li>Provide the client and server certificates using PEM strings. This is probably the most convenient way to setup
+ * <li>Provide the client and server certificates using PEM strings. This is probably the most convenient way to set up
  * the SSL connection because you're likely to have PEM certificates and private key rather than JKS stores. To set the
  * client certificate provide the private key as PEM with {@link #setPrivateKeyPem(String)} and provide the client
  * certificate chain as PEM with {@link #setClientCertificatePemChain(List)}. Provide the trusted certificates with
@@ -153,7 +153,7 @@ public class TaxiiConnection {
 
     /**
      * optional key store that contains your private key to be sent when the server is using SSL certificate-based
-     * authentication. It's expected that the key store would hold a single private key and its supporting certificates
+     * authentication. It's expected that the key store holds a single private key and its supporting certificates
      *
      * @param keyStore    a standard Java key store
      * @param keyPassword the private key password
@@ -182,7 +182,7 @@ public class TaxiiConnection {
     }
 
     /**
-     * optional key store file. If set the key store will be loaded from this file using the password set by
+     * optional key store file. If set, the key store is loaded from this file using the password set by
      * {@link #setKeyStorePassword(String)}
      *
      * @param keyStoreFile the key store file
@@ -192,7 +192,7 @@ public class TaxiiConnection {
     }
 
     /**
-     * optional trust store file. If set the trust store will be loaded from the file using the password set by
+     * optional trust store file. If set, the trust store is loaded from the file using the password set by
      * {@link #setTrustStorePassword(String)}
      *
      * @param trustStoreFile the trust store file
@@ -258,14 +258,14 @@ public class TaxiiConnection {
     }
 
     /**
-     * a convenient way to externally cache the key store would be to create it from PEMs using
+     * a convenient way to externally cache the key store is to create it from PEMs using
      * {@link #setPrivateKeyPem(String)} and {@link #setClientCertificatePemChain(List)} then obtaining it with this method and
      * storing it for future use.<p>
      * This method attempts to retrieve the key store in the following algorithm:
      * <ul>
      * <li>When it was already loaded or constructed it's returned</li>
      * <li>When it was directly set by {@link #setKeyStore(KeyStore, String)} then this key store is returned</li>
-     * <li>When a key store file and passowrd was set by {@link #setKeyStoreFile(File)} and
+     * <li>When a key store file and password was set by {@link #setKeyStoreFile(File)} and
      * {@link #setKeyStorePassword(String)}, then the key store is loaded from the file and returned</li>
      * <li>When a private key was set by {@link #setPrivateKeyPem(String)} and its certificate chain was set by
      * {@link #setClientCertificatePemChain(List)} then a new key store is created, the private key material and the
@@ -320,7 +320,7 @@ public class TaxiiConnection {
     }
 
     /**
-     * a convenient way to externally cache the trust store would be to create it from PEMs using
+     * a convenient way to externally cache the trust store is to create it from PEMs using
      * {@link #setTrustedPemCertificates(List)} then obtaining it with this method and storing it for future use.<p>
      * This method attempts to retrieve the trust store using the following algorithm:
      * <ul>
@@ -387,7 +387,7 @@ public class TaxiiConnection {
     /**
      * optional username for servers that require basic authentication
      *
-     * @param username if left blank preemptive basic authentication is not setup
+     * @param username if left blank preemptive basic authentication is not set up
      */
     public void setUsername(String username) {
         this.username = username;
@@ -405,7 +405,7 @@ public class TaxiiConnection {
     /**
      * a flag to request the use of an http/s proxy to access the TAXII server
      *
-     * @param useProxy when true the connection will attempt to setup an http/s proxy, depending on the
+     * @param useProxy when true the connection will attempt to set up an http/s proxy, depending on the
      *                 {@link #setDiscoveryUri(URI)}. This is considered a request because it depends on the
      *                 {@link #setProxyHost(String)}, see details there.
      */
@@ -427,8 +427,8 @@ public class TaxiiConnection {
     /**
      * optional proxy port
      *
-     * @param proxyPort if useProxy is true and this property is not specified, then the template will
-     *                  attempt to obtain the port from the system property http.proxyPort or https.proxyPort, depending
+     * @param proxyPort if useProxy is true and this property is not specified, then the template 
+     *                  attempts to obtain the port from the system property http.proxyPort or https.proxyPort, depending
      *                  on the discoveryUrl scheme
      */
     public void setProxyPort(int proxyPort) {

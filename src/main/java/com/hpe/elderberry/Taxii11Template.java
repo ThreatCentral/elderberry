@@ -99,7 +99,7 @@ public class Taxii11Template {
     }
 
     /**
-     * a convenience method to locate a service by type
+     * a convenient method to locate a service by type
      *
      * @param services a collection of <code>ServiceInstanceType</code>, likely to be in <code>discovery.getServiceInstances()</code>
      * @param type     the service type to locate in the collection
@@ -116,7 +116,7 @@ public class Taxii11Template {
     }
 
     /**
-     * a convenience method to locate a collection by name
+     * a convenient method to locate a collection by name
      *
      * @param collections a collection of <code>CollectionRecordType</code>, likely to be in <code>cm.getCollections()</code>
      * @param name        the name of the collection to locate
